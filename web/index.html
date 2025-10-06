@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <!-- <link rel="icon" type="image/svg+xml" href="/vite.svg" /> -->
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>/tally</title>
+    </head>
+    <body class="bg-gray-50">
+        <div class="max-w-2xl mx-auto my-4 space-y-4 px-4">
+            <h1 class="font-bold text-2xl">Tally Light Config</h1>
+
+            <div class="grid grid-cols-2 gap-4 items-center">
+                <label>WiFi SSID</label>
+                <input
+                    type="text"
+                    id="input_wifi_ssid"
+                    name="wifi_ssid"
+                    class="bg-white border px-2 py-1"
+                />
+
+                <label>WiFi Password</label>
+                <input
+                    type="password"
+                    id="input_wifi_password"
+                    name="wifi_password"
+                    class="bg-white border px-2 py-1"
+                />
+
+                <label>Camera</label>
+                <input
+                    type="text"
+                    id="input_camera"
+                    name="camera"
+                    class="bg-white border px-2 py-1"
+                />
+
+                <label>Brightness</label>
+                <div class="flex gap-2">
+                    <p id="label_brightness">64</p>
+                    <input
+                        type="range"
+                        min="1"
+                        max="255"
+                        id="input_brightness"
+                        name="brightness"
+                        class="grow"
+                    />
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-2">
+                <button id="button_save" class="bg-black text-white px-2 py-1">
+                    Save
+                </button>
+                <button
+                    id="button_restart"
+                    class="bg-black text-white px-2 py-1"
+                >
+                    Restart
+                </button>
+                <button
+                    id="button_signal"
+                    class="bg-black text-white px-2 py-1"
+                >
+                    Signal
+                </button>
+            </div>
+        </div>
+        <script type="module" src="/src/main.ts"></script>
+    </body>
+</html>
