@@ -4,6 +4,17 @@
 #include <FastLED.h>
 
 #define UI_NUM_LEDS 25
+#define UI_HEARTBEAT_TOLERANCE 2000
+
+#define UI_BITRATE_CRITICAL 1
+#define UI_BITRATE_BAD 2000
+#define UI_BITRATE_OK 4000
+#define UI_BITRATE_GOOD 6000
+
+#define UI_FRAMERATE_CRITICAL 25
+#define UI_FRAMERATE_BAD 27
+#define UI_FRAMERATE_OK 28
+#define UI_FRAMERATE_GOOD 29
 
 enum SignalType {
     UI_SIGNAL_SOLID,
@@ -19,4 +30,6 @@ enum SignalType {
 void ui_init();
 void ui_set_brightness(int brightness);
 void ui_signal(SignalType type);
-void ui_update(String program, String preview, String camera, bool transitioning);
+void ui_heartbeat();
+void ui_update(String program, String preview, String camera, bool transitioning, int bitrate,
+               float framerate, bool streaming, bool hold);

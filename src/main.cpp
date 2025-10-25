@@ -1,10 +1,12 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <ESPAsyncWebServer.h>
+#include <HTTPClient.h>
 #include <Preferences.h>
 #include <SPIFFS.h>
 #include <WiFi.h>
 
+#include "button.h"
 #include "config.h"
 #include "ui.h"
 
@@ -12,10 +14,16 @@ const unsigned long WIFI_JOIN_TIMEOUT = 10000;
 String program = "";
 String preview = "";
 bool transitioning = false;
+int bitrate = 0;
+float framerate = 0;
+bool streaming = false;
+bool hold = false;
 
 Preferences preferences;
 Config config("tally", &preferences);
 AsyncWebServer server(80);
+Button btn(39, INPUT_PULLUP, true);
+WiFiClient client;
 
 String get_mac_address() {
     uint8_t m[6];
@@ -55,7 +63,7 @@ void wifi_access_point() {
     WiFi.softAP(ssid);
 }
 
-void state_api_handler(AsyncWebServerRequest *request) {
+void state_api_handler(AsyncWebServerRequest* request) {
     if (request->hasParam("program")) {
         program = request->getParam("program")->value();
     }
@@ -68,6 +76,18 @@ void state_api_handler(AsyncWebServerRequest *request) {
         transitioning = request->getParam("transitioning")->value() == "true";
     }
 
+    if (request->hasParam("bitrate")) {
+        bitrate = request->getParam("bitrate")->value().toInt();
+    }
+
+    if (request->hasParam("framerate")) {
+        framerate = request->getParam("framerate")->value().toFloat();
+    }
+
+    if (request->hasParam("streaming")) {
+        streaming = request->getParam("streaming")->value() == "Live";
+    }
+
     Serial.println("State change:");
     Serial.print("  program: ");
     Serial.println(program);
@@ -76,10 +96,12 @@ void state_api_handler(AsyncWebServerRequest *request) {
     Serial.print("  transitioning: ");
     Serial.println(transitioning);
 
+    ui_heartbeat();
+
     request->send(200, "text/plain", "OK");
 }
 
-void signal_api_handler(AsyncWebServerRequest *request) {
+void signal_api_handler(AsyncWebServerRequest* request) {
     SignalType type = UI_SIGNAL_SOLID;
 
     if (request->hasParam("type")) {
@@ -104,24 +126,49 @@ void signal_api_handler(AsyncWebServerRequest *request) {
         }
     }
 
+    ui_heartbeat();
     ui_signal(type);
+}
+
+void begin_hold() {
+    hold = true;
+
+    String url = "http://companion.lan/api/location/3/0/0/press";
+    HTTPClient http;
+
+    http.begin(client, url.c_str());
+    int code = http.POST("");
+    String resp = http.getString();
+    http.end();
+}
+
+void end_hold() {
+    hold = false;
+
+    String url = "http://companion.lan/api/location/3/0/1/press";
+    HTTPClient http;
+
+    http.begin(client, url.c_str());
+    int code = http.POST("");
+    String resp = http.getString();
+    http.end();
 }
 
 void webserver_init() {
     server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html");
 
-    server.on("/api/config", [](AsyncWebServerRequest *request) {
+    server.on("/api/config", [](AsyncWebServerRequest* request) {
         config.handleRequest(request);
     });
 
-    server.on("/api/config_state", [](AsyncWebServerRequest *request) {
+    server.on("/api/config_state", [](AsyncWebServerRequest* request) {
         config.handleStateRequest(request);
     });
 
     server.on("/api/state", state_api_handler);
     server.on("/api/signal", signal_api_handler);
 
-    server.on("/api/restart", [](AsyncWebServerRequest *request) {
+    server.on("/api/restart", [](AsyncWebServerRequest* request) {
         request->send(200, "text/plain", "OK");
 
         request->onDisconnect([]() {
@@ -144,6 +191,14 @@ void setup() {
     ui_init();
     ui_set_brightness(config.brightness);
 
+    btn.onPress([]() {
+        if (hold) {
+            end_hold();
+        } else {
+            begin_hold();
+        }
+    });
+
     Serial.println("Initializing SPIFFS...");
 
     if (!SPIFFS.begin()) {
@@ -163,11 +218,15 @@ void setup() {
 
     Serial.println("Starting web server...");
     webserver_init();
+
+    end_hold();
 }
 
 void loop() {
     ui_set_brightness(config.brightness);
-    ui_update(program, preview, config.camera, transitioning);
+    ui_update(program, preview, config.camera, transitioning, bitrate, framerate, streaming, hold);
+
+    btn.update();
 
     delay(1);
 }
