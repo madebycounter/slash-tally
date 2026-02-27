@@ -85,7 +85,7 @@ window.onload = () => {
     };
 
     button_signal.onclick = () => {
-        fetch("/api/signal?type=solid").then(() => {
+        fetch(`/api/signal?id=${current_id}&type=solid`).then(() => {
             alert("Done");
         });
     };

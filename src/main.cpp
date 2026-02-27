@@ -90,12 +90,7 @@ void state_api_handler(AsyncWebServerRequest* request) {
 }
 
 void signal_api_handler(AsyncWebServerRequest* request) {
-    if (!request->hasParam("id")) {
-        request->send(400, "text/plain", "ERROR - Missing ID");
-        return;
-    }
-
-    if (url_decode(request->getParam("id")->value()) != config.id) {
+    if (request->hasParam("id") && url_decode(request->getParam("id")->value()) != config.id) {
         request->send(200, "text/plain", "OK - Not for me");
         return;
     }
