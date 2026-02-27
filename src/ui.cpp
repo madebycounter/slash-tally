@@ -34,6 +34,7 @@ uint8_t BM_CENTER[UI_NUM_LEDS] = {0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1,
 CRGB leds[UI_NUM_LEDS];
 long signal_counter = -99999;
 long heartbeat_counter = -99999;
+bool waiting_first_heartbeat = true;
 SignalType signal_type = UI_SIGNAL_SOLID;
 
 void set_rgb_bitmap(CRGB col, uint8_t bitmap[UI_NUM_LEDS], bool invert = false, bool clear = true) {
@@ -52,6 +53,12 @@ void set_rgb_solid(CRGB col) {
     fill_solid(leds, UI_NUM_LEDS, col);
 }
 
+void set_rgb_dithered(CRGB col) {
+    for (int i = 0; i < UI_NUM_LEDS; i+=2) {
+        leds[i] = col;
+    }
+}
+
 void set_rgb_off() {
     set_rgb_solid(CRGB::Black);
 }
@@ -68,6 +75,28 @@ void ui_set_brightness(int brightness) {
     FastLED.setBrightness(brightness);
 }
 
+void ui_spinner(CRGB col) {
+    static const uint8_t ring[] = {6, 7, 8, 13, 18, 17, 16, 11};
+    static const uint8_t RING_LEN = 8;
+    static const uint8_t TRAIL_LEN = 5;
+
+    FastLED.clear();
+
+    int head = (millis() / 100) % RING_LEN;
+
+    for (int i = 0; i < TRAIL_LEN; i++) {
+        int idx = (head - i + RING_LEN) % RING_LEN;
+        uint8_t brightness = 255 - (i * (255 / TRAIL_LEN));
+        leds[ring[idx]] = CRGB(
+            scale8(col.r, brightness),
+            scale8(col.g, brightness),
+            scale8(col.b, brightness)
+        );
+    }
+
+    FastLED.show();
+}
+
 void ui_signal(SignalType type) {
     signal_counter = millis();
     signal_type = type;
@@ -75,10 +104,15 @@ void ui_signal(SignalType type) {
 
 void ui_heartbeat() {
     heartbeat_counter = millis();
+    waiting_first_heartbeat = false;
 }
 
-void ui_update(String program, String preview, String camera, bool transitioning, int bitrate,
-               float framerate, bool streaming, bool hold) {
+void ui_update(String program, String preview, String camera, bool transitioning, bool access_point) {
+    if (waiting_first_heartbeat) {
+        ui_spinner(access_point ? CRGB::Green : CRGB::Red);
+        return;
+    }
+
     bool onScreen = program == camera || preview == camera;
     bool onAir = program == camera;
 
@@ -105,59 +139,28 @@ void ui_update(String program, String preview, String camera, bool transitioning
             }
         }
     } else if (onScreen && transitioning) {
+        set_rgb_off();
+
         if (int(millis() / 100.0) % 2 == 0) {
-            set_rgb_solid(CRGB::Green);
-        } else {
-            set_rgb_off();
+            set_rgb_dithered(CRGB::Red);
         }
     } else if (onAir) {
         set_rgb_solid(CRGB::Red);
     } else if (onScreen) {
         set_rgb_solid(CRGB::Green);
     } else {
-        // set_rgb_idle();
         set_rgb_off();
     }
 
-    if (hold) {
-        if ((millis() / 250) % 2 == 0) {
-            set_rgb_bitmap(CRGB::Red, BM_CENTER, false, false);
-        } else {
-            set_rgb_bitmap(CRGB::Black, BM_CENTER, false, false);
-        }
-    }
+    CRGB heartbeat_color = access_point ? CRGB::Red : CRGB::Blue;
 
     if (millis() - heartbeat_counter < UI_HEARTBEAT_TOLERANCE) {
-        leds[UI_NUM_LEDS - 1] = CRGB::Blue;
+        leds[UI_NUM_LEDS - 1] = heartbeat_color;
     } else {
         if ((millis() / 100) % 2 == 0) {
-            leds[UI_NUM_LEDS - 1] = CRGB::Blue;
+            leds[UI_NUM_LEDS - 1] = heartbeat_color;
         } else {
             leds[UI_NUM_LEDS - 1] = CRGB::Black;
-        }
-    }
-
-    if (streaming) {
-        if (bitrate < UI_BITRATE_CRITICAL || framerate < UI_FRAMERATE_CRITICAL) {
-            if ((millis() / 100) % 2 == 0) {
-                leds[UI_NUM_LEDS - 2] = CRGB::Red;
-            } else {
-                leds[UI_NUM_LEDS - 2] = CRGB::Black;
-            }
-        } else if (bitrate < UI_BITRATE_BAD || framerate < UI_FRAMERATE_BAD) {
-            leds[UI_NUM_LEDS - 2] = CRGB::Red;
-        } else if (bitrate < UI_BITRATE_OK || framerate < UI_FRAMERATE_OK) {
-            leds[UI_NUM_LEDS - 2] = CRGB::Orange;
-        } else if (bitrate < UI_BITRATE_GOOD || framerate < UI_FRAMERATE_GOOD) {
-            leds[UI_NUM_LEDS - 2] = CRGB::Cyan;
-        } else {
-            leds[UI_NUM_LEDS - 2] = CRGB::Blue;
-        }
-    } else {
-        if ((millis() / 100) % 2 == 0) {
-            leds[UI_NUM_LEDS - 2] = CRGB::Red;
-        } else {
-            leds[UI_NUM_LEDS - 2] = CRGB::Black;
         }
     }
 

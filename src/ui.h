@@ -29,7 +29,7 @@ enum SignalType {
 
 void ui_init();
 void ui_set_brightness(int brightness);
+void ui_spinner(CRGB col);
 void ui_signal(SignalType type);
 void ui_heartbeat();
-void ui_update(String program, String preview, String camera, bool transitioning, int bitrate,
-               float framerate, bool streaming, bool hold);
+void ui_update(String program, String preview, String camera, bool transitioning, bool access_point);

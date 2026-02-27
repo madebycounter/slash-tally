@@ -9,15 +9,13 @@
 #include "button.h"
 #include "config.h"
 #include "ui.h"
+#include "util.h"
 
 const unsigned long WIFI_JOIN_TIMEOUT = 10000;
 String program = "";
 String preview = "";
 bool transitioning = false;
-int bitrate = 0;
-float framerate = 0;
-bool streaming = false;
-bool hold = false;
+bool access_point = false;
 
 Preferences preferences;
 Config config("tally", &preferences);
@@ -46,6 +44,7 @@ bool wifi_connect() {
     unsigned long start = millis();
 
     while (WiFi.status() != WL_CONNECTED && millis() - start < WIFI_JOIN_TIMEOUT) {
+        ui_spinner(CRGB::Blue);
         delay(50);
     }
 
@@ -61,6 +60,7 @@ void wifi_access_point() {
     WiFi.mode(WIFI_AP);
     WiFi.softAPConfig(local_ip, gateway, subnet);
     WiFi.softAP(ssid);
+    access_point = true;
 }
 
 void state_api_handler(AsyncWebServerRequest* request) {
@@ -76,25 +76,13 @@ void state_api_handler(AsyncWebServerRequest* request) {
         transitioning = request->getParam("transitioning")->value() == "true";
     }
 
-    if (request->hasParam("bitrate")) {
-        bitrate = request->getParam("bitrate")->value().toInt();
-    }
-
-    if (request->hasParam("framerate")) {
-        framerate = request->getParam("framerate")->value().toFloat();
-    }
-
-    if (request->hasParam("streaming")) {
-        streaming = request->getParam("streaming")->value() == "Live";
-    }
-
-    Serial.println("State change:");
-    Serial.print("  program: ");
-    Serial.println(program);
-    Serial.print("  preview: ");
-    Serial.println(preview);
-    Serial.print("  transitioning: ");
-    Serial.println(transitioning);
+    // Serial.println("State change:");
+    // Serial.print("  program: ");
+    // Serial.println(program);
+    // Serial.print("  preview: ");
+    // Serial.println(preview);
+    // Serial.print("  transitioning: ");
+    // Serial.println(transitioning);
 
     ui_heartbeat();
 
@@ -102,6 +90,16 @@ void state_api_handler(AsyncWebServerRequest* request) {
 }
 
 void signal_api_handler(AsyncWebServerRequest* request) {
+    if (!request->hasParam("id")) {
+        request->send(400, "text/plain", "ERROR - Missing ID");
+        return;
+    }
+
+    if (url_decode(request->getParam("id")->value()) != config.id) {
+        request->send(200, "text/plain", "OK - Not for me");
+        return;
+    }
+
     SignalType type = UI_SIGNAL_SOLID;
 
     if (request->hasParam("type")) {
@@ -128,30 +126,8 @@ void signal_api_handler(AsyncWebServerRequest* request) {
 
     ui_heartbeat();
     ui_signal(type);
-}
 
-void begin_hold() {
-    hold = true;
-
-    String url = "http://companion.lan/api/location/3/0/0/press";
-    HTTPClient http;
-
-    http.begin(client, url.c_str());
-    int code = http.POST("");
-    String resp = http.getString();
-    http.end();
-}
-
-void end_hold() {
-    hold = false;
-
-    String url = "http://companion.lan/api/location/3/0/1/press";
-    HTTPClient http;
-
-    http.begin(client, url.c_str());
-    int code = http.POST("");
-    String resp = http.getString();
-    http.end();
+    request->send(200, "text/plain", "OK");
 }
 
 void webserver_init() {
@@ -191,14 +167,6 @@ void setup() {
     ui_init();
     ui_set_brightness(config.brightness);
 
-    btn.onPress([]() {
-        if (hold) {
-            end_hold();
-        } else {
-            begin_hold();
-        }
-    });
-
     Serial.println("Initializing SPIFFS...");
 
     if (!SPIFFS.begin()) {
@@ -218,13 +186,11 @@ void setup() {
 
     Serial.println("Starting web server...");
     webserver_init();
-
-    end_hold();
 }
 
 void loop() {
     ui_set_brightness(config.brightness);
-    ui_update(program, preview, config.camera, transitioning, bitrate, framerate, streaming, hold);
+    ui_update(program, preview, config.camera, transitioning, access_point);
 
     btn.update();
 

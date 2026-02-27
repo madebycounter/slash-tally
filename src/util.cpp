@@ -34,3 +34,19 @@ String url_decode(String input) {
     s.replace("%60", "`");
     return s;
 }
+
+String random_string(int length) {
+    String s = "";
+
+    for (int i = 0; i < length; i++) {
+        int rnd = random(16);
+
+        if (rnd < 10) {
+            s += (char)('0' + rnd);
+        } else {
+            s += (char)('A' + rnd - 10);
+        }
+    }
+
+    return s;
+}

@@ -11,6 +11,7 @@ void Config::load() {
     wifi_password = prefs->getString("wifi_password", "");
     camera = prefs->getString("camera", "in 1");
     brightness = prefs->getInt("brightness", 64);
+    id = prefs->getString("id", random_string(8));
     prefs->end();
 }
 
@@ -20,6 +21,7 @@ void Config::save() {
     prefs->putString("wifi_password", wifi_password);
     prefs->putString("camera", camera);
     prefs->putInt("brightness", brightness);
+    prefs->putString("id", id);
     prefs->end();
 }
 
@@ -32,6 +34,8 @@ void Config::reset() {
 
 void Config::print() {
     Serial.println("Config state:");
+    Serial.print("  id: ");
+    Serial.println(id);
     Serial.print("  wifi_ssid: ");
     Serial.println(wifi_ssid);
     Serial.print("  wifi_password: ");
@@ -43,6 +47,20 @@ void Config::print() {
 }
 
 void Config::handleRequest(AsyncWebServerRequest *request) {
+    if (!request->hasParam("id")) {
+        request->send(400, "text/plain", "ERROR - Missing ID");
+        return;
+    }
+
+    if (url_decode(request->getParam("id")->value()) != id) {
+        request->send(200, "text/plain", "OK - Not for me");
+        return;
+    }
+
+    if (request->hasParam("new_id")) {
+        id = url_decode(request->getParam("new_id")->value());
+    }
+    
     if (request->hasParam("wifi_ssid")) {
         wifi_ssid = url_decode(request->getParam("wifi_ssid")->value());
     }
@@ -72,6 +90,7 @@ void Config::handleRequest(AsyncWebServerRequest *request) {
 
 void Config::handleStateRequest(AsyncWebServerRequest *request) {
     String json = "{";
+    json += "\"id\":\"" + id + "\",";
     json += "\"wifi_ssid\":\"" + wifi_ssid + "\",";
     json += "\"wifi_password\":\"" + wifi_password + "\",";
     json += "\"camera\":\"" + camera + "\",";

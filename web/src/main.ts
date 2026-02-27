@@ -1,6 +1,11 @@
 import "./style.css";
 
 window.onload = () => {
+    var current_id: string | null = null;
+
+    var input_tally_id = document.getElementById(
+        "input_tally_id"
+    ) as HTMLInputElement;
     var input_wifi_ssid = document.getElementById(
         "input_wifi_ssid"
     ) as HTMLInputElement;
@@ -25,10 +30,20 @@ window.onload = () => {
     var button_signal = document.getElementById(
         "button_signal"
     ) as HTMLButtonElement;
+    var title_id = document.getElementById("title_id") as HTMLSpanElement;
+
+    function update_id(new_id: string) {
+        input_tally_id.value = new_id;
+        title_id.innerHTML = "(" + new_id + ")";
+        document.title = `/tally (${new_id})`;
+        current_id = new_id;
+    }
 
     fetch("/api/config_state")
         .then((resp) => resp.json())
         .then((dat) => {
+            update_id(dat.id);
+
             input_wifi_ssid.value = dat.wifi_ssid;
             input_wifi_password.value = dat.wifi_password;
             input_camera.value = dat.camera;
@@ -49,11 +64,17 @@ window.onload = () => {
         var wifi_password = input_wifi_password.value;
         var camera = input_camera.value;
         var brightness = input_brightness.value;
+        var new_id = input_tally_id.value;
+
+        if (!current_id) {
+            return
+        }
 
         fetch(
-            `/api/config?wifi_ssid=${wifi_ssid}&wifi_password=${wifi_password}&camera=${camera}&brightness=${brightness}`
+            `/api/config?id=${current_id}&new_id=${new_id}&wifi_ssid=${wifi_ssid}&wifi_password=${wifi_password}&camera=${camera}&brightness=${brightness}`
         ).then(() => {
             alert("Done");
+            update_id(new_id);
         });
     };
 

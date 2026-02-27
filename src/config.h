@@ -19,6 +19,7 @@ public:
     void handleStateRequest(AsyncWebServerRequest *request);
     void print();
 
+    String id;
     String wifi_ssid;
     String wifi_password;
     String camera;
