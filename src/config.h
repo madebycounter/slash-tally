@@ -7,21 +7,26 @@
 class Config {
 private:
     String ns;
-    Preferences *prefs;
+    Preferences* prefs;
 
 public:
-    Config(String ns, Preferences *prefs);
+    Config(String ns, Preferences* prefs);
 
     void load();
     void save();
     void reset();
-    void handleRequest(AsyncWebServerRequest *request);
-    void handleStateRequest(AsyncWebServerRequest *request);
+    void handleRequest(AsyncWebServerRequest* request);
+    void handleStateRequest(AsyncWebServerRequest* request);
     void print();
 
     String id;
     String wifi_ssid;
     String wifi_password;
     String camera;
+    String cam_1;
+    String cam_2;
+    String cam_3;
+    String cam_4;
+    int score;
     int brightness;
 };

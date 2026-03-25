@@ -16,12 +16,32 @@ String program = "";
 String preview = "";
 bool transitioning = false;
 bool access_point = false;
+bool advanced_mode = false;
+bool on_air = false;
+long on_air_counter = -99999;
 
 Preferences preferences;
 Config config("tally", &preferences);
 AsyncWebServer server(80);
 Button btn(39, INPUT_PULLUP, true);
 WiFiClient client;
+
+int camera_to_posn(String cam) {
+    if (cam == config.cam_1) {
+        return 0;
+    }
+    if (cam == config.cam_2) {
+        return 1;
+    }
+    if (cam == config.cam_3) {
+        return 2;
+    }
+    if (cam == config.cam_4) {
+        return 3;
+    }
+
+    return -1;
+}
 
 String get_mac_address() {
     uint8_t m[6];
@@ -162,6 +182,10 @@ void setup() {
     ui_init();
     ui_set_brightness(config.brightness);
 
+    btn.onDoublePress([]() {
+        advanced_mode = !advanced_mode;
+    });
+
     Serial.println("Initializing SPIFFS...");
 
     if (!SPIFFS.begin()) {
@@ -185,7 +209,21 @@ void setup() {
 
 void loop() {
     ui_set_brightness(config.brightness);
-    ui_update(program, preview, config.camera, transitioning, access_point);
+    ui_update(program, preview, config.camera, camera_to_posn(program), camera_to_posn(preview),
+              transitioning, access_point, advanced_mode);
+
+    if (program == config.camera || (preview == config.camera && transitioning)) {
+        if (on_air == false) {
+            on_air = true;
+            on_air_counter = millis();
+        }
+    } else {
+        if (on_air == true) {
+            on_air = false;
+            config.score += millis() - on_air_counter;
+            config.save();
+        }
+    }
 
     btn.update();
 

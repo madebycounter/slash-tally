@@ -32,4 +32,5 @@ void ui_set_brightness(int brightness);
 void ui_spinner(CRGB col);
 void ui_signal(SignalType type);
 void ui_heartbeat();
-void ui_update(String program, String preview, String camera, bool transitioning, bool access_point);
+void ui_update(String program, String preview, String camera, int preview_idx, int program_idx,
+               bool transitioning, bool access_point, bool advanced_mode);

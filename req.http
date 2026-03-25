@@ -1,1 +1,23 @@
-POST http://companion.lan/api/location/1/1/0/press
+###
+POST http://192.168.8.1:9000/api/state?program=CAM1&preview=CAM2
+
+###
+POST http://192.168.8.1:9000/api/state?program=CAM1&preview=CAM3
+
+###
+POST http://192.168.8.1:9000/api/state?program=CAM2&preview=CAM3
+
+###
+POST http://192.168.8.1:9000/api/state?program=CAM3&preview=CAM1
+
+###
+POST http://192.168.8.1:9000/api/state?program=CAM4&preview=CAM2
+
+###
+POST http://192.168.8.1:9000/api/state?transitioning=true
+
+###
+POST http://192.168.8.1:9000/api/state?transitioning=false
+
+###
+POST http://192.168.8.1:9000/api/config?cam_1=CAM1&cam_2=CAM2&cam_3=CAM3&cam_4=CAM4

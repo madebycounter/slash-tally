@@ -54,7 +54,7 @@ void set_rgb_solid(CRGB col) {
 }
 
 void set_rgb_dithered(CRGB col) {
-    for (int i = 0; i < UI_NUM_LEDS; i+=2) {
+    for (int i = 0; i < UI_NUM_LEDS; i += 2) {
         leds[i] = col;
     }
 }
@@ -87,11 +87,8 @@ void ui_spinner(CRGB col) {
     for (int i = 0; i < TRAIL_LEN; i++) {
         int idx = (head - i + RING_LEN) % RING_LEN;
         uint8_t brightness = 255 - (i * (255 / TRAIL_LEN));
-        leds[ring[idx]] = CRGB(
-            scale8(col.r, brightness),
-            scale8(col.g, brightness),
-            scale8(col.b, brightness)
-        );
+        leds[ring[idx]] =
+            CRGB(scale8(col.r, brightness), scale8(col.g, brightness), scale8(col.b, brightness));
     }
 
     FastLED.show();
@@ -107,7 +104,8 @@ void ui_heartbeat() {
     waiting_first_heartbeat = false;
 }
 
-void ui_update(String program, String preview, String camera, bool transitioning, bool access_point) {
+void ui_update(String program, String preview, String camera, int program_idx, int preview_idx,
+               bool transitioning, bool access_point, bool advanced_mode) {
     if (waiting_first_heartbeat) {
         ui_spinner(access_point ? CRGB::Green : CRGB::Red);
         return;
@@ -164,5 +162,34 @@ void ui_update(String program, String preview, String camera, bool transitioning
         }
     }
 
+    if (advanced_mode) {
+        for (int i = 2; i <= 5; i++) {
+            leds[UI_NUM_LEDS - i] = CRGB::Black;
+        }
+
+        if (program_idx != -1) {
+            if (transitioning) {
+                leds[UI_NUM_LEDS - (5 - program_idx)] = CRGB::Black;
+
+                if (int(millis() / 100.0) % 2 == 0) {
+                    leds[UI_NUM_LEDS - (5 - program_idx)] = CRGB::Red;
+                }
+            } else {
+                leds[UI_NUM_LEDS - (5 - program_idx)] = CRGB::Red;
+            }
+        }
+
+        if (preview_idx != -1) {
+            if (transitioning) {
+                leds[UI_NUM_LEDS - (5 - preview_idx)] = CRGB::Black;
+
+                if (int(millis() / 100.0) % 2 == 0) {
+                    leds[UI_NUM_LEDS - (5 - preview_idx)] = CRGB::Red;
+                }
+            } else {
+                leds[UI_NUM_LEDS - (5 - preview_idx)] = CRGB::Green;
+            }
+        }
+    }
     FastLED.show();
 }

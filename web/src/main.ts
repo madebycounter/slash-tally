@@ -4,31 +4,34 @@ window.onload = () => {
     var current_id: string | null = null;
 
     var input_tally_id = document.getElementById(
-        "input_tally_id"
+        "input_tally_id",
     ) as HTMLInputElement;
     var input_wifi_ssid = document.getElementById(
-        "input_wifi_ssid"
+        "input_wifi_ssid",
     ) as HTMLInputElement;
     var input_wifi_password = document.getElementById(
-        "input_wifi_password"
+        "input_wifi_password",
     ) as HTMLInputElement;
     var input_camera = document.getElementById(
-        "input_camera"
+        "input_camera",
     ) as HTMLInputElement;
     var input_brightness = document.getElementById(
-        "input_brightness"
+        "input_brightness",
+    ) as HTMLInputElement;
+    var input_score = document.getElementById(
+        "input_score",
     ) as HTMLInputElement;
     var label_brightness = document.getElementById(
-        "label_brightness"
+        "label_brightness",
     ) as HTMLParagraphElement;
     var button_save = document.getElementById(
-        "button_save"
+        "button_save",
     ) as HTMLButtonElement;
     var button_restart = document.getElementById(
-        "button_restart"
+        "button_restart",
     ) as HTMLButtonElement;
     var button_signal = document.getElementById(
-        "button_signal"
+        "button_signal",
     ) as HTMLButtonElement;
     var title_id = document.getElementById("title_id") as HTMLSpanElement;
 
@@ -48,6 +51,7 @@ window.onload = () => {
             input_wifi_password.value = dat.wifi_password;
             input_camera.value = dat.camera;
             input_brightness.value = dat.brightness;
+            input_score.value = dat.score;
             label_brightness.innerHTML = dat.brightness;
         });
 
@@ -67,11 +71,11 @@ window.onload = () => {
         var new_id = input_tally_id.value;
 
         if (!current_id) {
-            return
+            return;
         }
 
         fetch(
-            `/api/config?id=${current_id}&new_id=${new_id}&wifi_ssid=${wifi_ssid}&wifi_password=${wifi_password}&camera=${camera}&brightness=${brightness}`
+            `/api/config?id=${current_id}&new_id=${new_id}&wifi_ssid=${wifi_ssid}&wifi_password=${wifi_password}&camera=${camera}&brightness=${brightness}`,
         ).then(() => {
             alert("Done");
             update_id(new_id);
