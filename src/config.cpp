@@ -9,14 +9,18 @@ void Config::load() {
     prefs->begin(ns.c_str(), false);
     wifi_ssid = prefs->getString("wifi_ssid", "");
     wifi_password = prefs->getString("wifi_password", "");
-    camera = prefs->getString("camera", "in 1");
+    camera = prefs->getInt("camera", 1);
     brightness = prefs->getInt("brightness", 64);
     id = prefs->getString("id", random_string(8));
+    score = prefs->getInt("score", 0);
     cam_1 = prefs->getString("cam_1", "");
     cam_2 = prefs->getString("cam_2", "");
     cam_3 = prefs->getString("cam_3", "");
     cam_4 = prefs->getString("cam_4", "");
-    score = prefs->getInt("score", 0);
+    cam_5 = prefs->getString("cam_5", "");
+    cam_6 = prefs->getString("cam_6", "");
+    cam_7 = prefs->getString("cam_7", "");
+    cam_8 = prefs->getString("cam_8", "");
     prefs->end();
 }
 
@@ -24,14 +28,18 @@ void Config::save() {
     prefs->begin(ns.c_str(), false);
     prefs->putString("wifi_ssid", wifi_ssid);
     prefs->putString("wifi_password", wifi_password);
-    prefs->putString("camera", camera);
+    prefs->putInt("camera", camera);
     prefs->putInt("brightness", brightness);
     prefs->putString("id", id);
+    prefs->putInt("score", score);
     prefs->putString("cam_1", cam_1);
     prefs->putString("cam_2", cam_2);
     prefs->putString("cam_3", cam_3);
     prefs->putString("cam_4", cam_4);
-    prefs->putInt("score", score);
+    prefs->putString("cam_5", cam_5);
+    prefs->putString("cam_6", cam_6);
+    prefs->putString("cam_7", cam_7);
+    prefs->putString("cam_8", cam_8);
     prefs->end();
 }
 
@@ -82,7 +90,8 @@ void Config::handleRequest(AsyncWebServerRequest* request) {
     }
 
     if (request->hasParam("camera")) {
-        camera = url_decode(request->getParam("camera")->value());
+        String camera_str = url_decode(request->getParam("camera")->value());
+        camera = camera_str.toInt();
     }
 
     if (request->hasParam("cam_1")) {
@@ -99,6 +108,22 @@ void Config::handleRequest(AsyncWebServerRequest* request) {
 
     if (request->hasParam("cam_4")) {
         cam_4 = url_decode(request->getParam("cam_4")->value());
+    }
+
+    if (request->hasParam("cam_5")) {
+        cam_4 = url_decode(request->getParam("cam_5")->value());
+    }
+
+    if (request->hasParam("cam_6")) {
+        cam_4 = url_decode(request->getParam("cam_6")->value());
+    }
+
+    if (request->hasParam("cam_7")) {
+        cam_4 = url_decode(request->getParam("cam_7")->value());
+    }
+
+    if (request->hasParam("cam_8")) {
+        cam_4 = url_decode(request->getParam("cam_8")->value());
     }
 
     if (request->hasParam("score")) {
@@ -126,12 +151,16 @@ void Config::handleStateRequest(AsyncWebServerRequest* request) {
     json += "\"id\":\"" + id + "\",";
     json += "\"wifi_ssid\":\"" + wifi_ssid + "\",";
     json += "\"wifi_password\":\"" + wifi_password + "\",";
-    json += "\"camera\":\"" + camera + "\",";
+    json += "\"camera\":\"" + String(camera) + "\",";
     json += "\"brightness\":" + String(brightness) + ",";
     json += "\"cam_1\":\"" + cam_1 + "\",";
     json += "\"cam_2\":\"" + cam_2 + "\",";
     json += "\"cam_3\":\"" + cam_3 + "\",";
     json += "\"cam_4\":\"" + cam_4 + "\",";
+    json += "\"cam_5\":\"" + cam_5 + "\",";
+    json += "\"cam_6\":\"" + cam_6 + "\",";
+    json += "\"cam_7\":\"" + cam_7 + "\",";
+    json += "\"cam_8\":\"" + cam_8 + "\",";
     json += "\"score\":" + String(score);
     json += "}";
     request->send(200, "application/json", json);

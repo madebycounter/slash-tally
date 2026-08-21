@@ -22,11 +22,16 @@ public:
     String id;
     String wifi_ssid;
     String wifi_password;
-    String camera;
+    int camera;
+    int score;
+    int brightness;
+
     String cam_1;
     String cam_2;
     String cam_3;
     String cam_4;
-    int score;
-    int brightness;
+    String cam_5;
+    String cam_6;
+    String cam_7;
+    String cam_8;
 };

@@ -104,8 +104,8 @@ void ui_heartbeat() {
     waiting_first_heartbeat = false;
 }
 
-void ui_update(String program, String preview, String camera, int program_idx, int preview_idx,
-               bool transitioning, bool access_point, bool advanced_mode) {
+void ui_update(int program, int preview, int camera, bool transitioning, bool access_point,
+               bool advanced_mode) {
     if (waiting_first_heartbeat) {
         ui_spinner(access_point ? CRGB::Green : CRGB::Red);
         return;
@@ -162,34 +162,5 @@ void ui_update(String program, String preview, String camera, int program_idx, i
         }
     }
 
-    if (advanced_mode) {
-        for (int i = 2; i <= 5; i++) {
-            leds[UI_NUM_LEDS - i] = CRGB::Black;
-        }
-
-        if (program_idx != -1) {
-            if (transitioning) {
-                leds[UI_NUM_LEDS - (5 - program_idx)] = CRGB::Black;
-
-                if (int(millis() / 100.0) % 2 == 0) {
-                    leds[UI_NUM_LEDS - (5 - program_idx)] = CRGB::Red;
-                }
-            } else {
-                leds[UI_NUM_LEDS - (5 - program_idx)] = CRGB::Red;
-            }
-        }
-
-        if (preview_idx != -1) {
-            if (transitioning) {
-                leds[UI_NUM_LEDS - (5 - preview_idx)] = CRGB::Black;
-
-                if (int(millis() / 100.0) % 2 == 0) {
-                    leds[UI_NUM_LEDS - (5 - preview_idx)] = CRGB::Red;
-                }
-            } else {
-                leds[UI_NUM_LEDS - (5 - preview_idx)] = CRGB::Green;
-            }
-        }
-    }
     FastLED.show();
 }

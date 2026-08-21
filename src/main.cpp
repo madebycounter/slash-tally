@@ -12,8 +12,8 @@
 #include "util.h"
 
 const unsigned long WIFI_JOIN_TIMEOUT = 10000;
-String program = "";
-String preview = "";
+int program = 0;
+int preview = 0;
 bool transitioning = false;
 bool access_point = false;
 bool advanced_mode = false;
@@ -28,19 +28,31 @@ WiFiClient client;
 
 int camera_to_posn(String cam) {
     if (cam == config.cam_1) {
-        return 0;
-    }
-    if (cam == config.cam_2) {
         return 1;
     }
-    if (cam == config.cam_3) {
+    if (cam == config.cam_2) {
         return 2;
     }
-    if (cam == config.cam_4) {
+    if (cam == config.cam_3) {
         return 3;
     }
+    if (cam == config.cam_4) {
+        return 4;
+    }
+    if (cam == config.cam_5) {
+        return 5;
+    }
+    if (cam == config.cam_6) {
+        return 6;
+    }
+    if (cam == config.cam_7) {
+        return 7;
+    }
+    if (cam == config.cam_8) {
+        return 8;
+    }
 
-    return -1;
+    return 0;
 }
 
 String get_mac_address() {
@@ -85,11 +97,13 @@ void wifi_access_point() {
 
 void state_api_handler(AsyncWebServerRequest* request) {
     if (request->hasParam("program")) {
-        program = request->getParam("program")->value();
+        String program_str = request->getParam("program")->value();
+        program = camera_to_posn(program_str);
     }
 
     if (request->hasParam("preview")) {
-        preview = request->getParam("preview")->value();
+        String preview_str = request->getParam("preview")->value();
+        preview = camera_to_posn(preview_str);
     }
 
     if (request->hasParam("transitioning")) {
@@ -209,8 +223,7 @@ void setup() {
 
 void loop() {
     ui_set_brightness(config.brightness);
-    ui_update(program, preview, config.camera, camera_to_posn(program), camera_to_posn(preview),
-              transitioning, access_point, advanced_mode);
+    ui_update(program, preview, config.camera, transitioning, access_point, advanced_mode);
 
     if (program == config.camera || (preview == config.camera && transitioning)) {
         if (on_air == false) {
